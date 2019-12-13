@@ -4,8 +4,6 @@ conditions: v1
 dist: bionic
 # Config file for automatic testing at travis-ci.org
 
-services:
-  - libvirtd
 language: python
 
 branches:
