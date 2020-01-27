@@ -1,0 +1,13 @@
+gcc-c++ [test platform:rpm]
+gcc [test platform:rpm]
+
+libvirt [platform:rpm]
+libvirt-devel [platform:rpm]
+libvirt-dev [platform:dpkg]
+libvirt-daemon [platform:dpkg]
+python3-devel [test !platform:centos-7 platform:rpm]
+python3-libselinux [platform:fedora]
+libvirt-daemon-kvm [platform:rpm]
+pkg-config [platform:dpkg]
+python3-libvirt [platform:rpm platform:dpkg]
+qemu-kvm [platform:rpm]

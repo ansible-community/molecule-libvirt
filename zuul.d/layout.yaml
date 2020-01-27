@@ -1,0 +1,28 @@
+---
+# zuul.d/layout.yaml
+- job:
+    name: ansible-tox-packaging
+    parent: ansible-tox-molecule
+    timeout: 3600
+    vars:
+      tox_envlist: packaging
+
+- project:
+    check:
+      jobs: &defaults
+        # tier 1
+        - ansible-tox-linters:
+            vars:
+              tox_envlist: lint
+        - ansible-tox-packaging
+        - ansible-tox-py35:
+            # TODO(ssbarnea): Make it voting one we address
+            # https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/1588004
+            # sudo systemctl enable --now libvirtd
+            # Failed to execute operation: Too many levels of symbolic links
+            voting: false
+        - ansible-tox-py36
+        - ansible-tox-py37
+        - ansible-tox-devel
+    gate:
+      jobs: *defaults
