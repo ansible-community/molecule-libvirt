@@ -15,12 +15,11 @@
             vars:
               tox_envlist: lint
         - ansible-tox-packaging
-        - ansible-tox-py35:
-            # TODO(ssbarnea): Make it voting one we address
-            # https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/1588004
-            # sudo systemctl enable --now libvirtd
-            # Failed to execute operation: Too many levels of symbolic links
-            voting: false
+        # TODO(ssbarnea): Find a py35 platform without broken libvirt
+        # - ansible-tox-py35:
+        #     # https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/1588004
+        #     # sudo systemctl enable --now libvirtd
+        #     # Failed to execute operation: Too many levels of symbolic links
         - ansible-tox-py36
         - ansible-tox-py37
         - ansible-tox-devel
