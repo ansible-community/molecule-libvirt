@@ -6,8 +6,8 @@ Molecule libvirt Plugin
    :target: https://badge.fury.io/py/molecule-libvirt
    :alt: PyPI Package
 
-.. image:: https://img.shields.io/travis/com/pycontribs/molecule-libvirt/master.svg?label=Linux%20builds%20%40%20Travis%20CI
-   :target: https://travis-ci.com/pycontribs/molecule-libvirt
+.. image:: https://zuul-ci.org/gated.svg
+   :target: https://dashboard.zuul.ansible.com/t/ansible/builds?project=ansible-community/molecule
 
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
    :target: https://github.com/python/black
@@ -28,13 +28,8 @@ Molecule libvirt Plugin
 Molecule libvirt is designed to allow use of libvirt for provisioning test
 resources.
 
-Please note that this driver is currently in early stage of development,
+Please note that this driver is currently in its early stage of development,
 do not even try to install or use it until this message is removed.
-
-Documentation
-=============
-
-Read the documentation and more at https://molecule.readthedocs.io/.
 
 .. _get-involved:
 
