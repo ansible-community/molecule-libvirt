@@ -1,11 +1,5 @@
 ---
 # zuul.d/layout.yaml
-- job:
-    name: ansible-tox-packaging
-    parent: ansible-tox-molecule
-    timeout: 3600
-    vars:
-      tox_envlist: packaging
 
 - project:
     check:
@@ -14,7 +8,6 @@
         - ansible-tox-linters:
             vars:
               tox_envlist: lint
-        - ansible-tox-packaging
         # TODO(ssbarnea): Find a py35 platform without broken libvirt
         # - ansible-tox-py35:
         #     # https://bugs.launchpad.net/ubuntu/+source/libvirt/+bug/1588004
