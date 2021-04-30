@@ -1,0 +1,221 @@
+---
+
+- name: Create
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  no_log: "{{ molecule_no_log }}"
+  vars:
+    molecule_dns_suffix: "molecule.lab"
+    molecule_network_name: "molecule-network"
+    molecule_ssh_user: "molecule"
+    molecule_private_key_path: "{{ lookup('env', 'HOME') }}/.cache/molecule/id_ssh_rsa"
+    libvirt_default_image_path: "{{ lookup('env', 'HOME') }}/libvirt-test"
+    libvirt_vm_arch: "x86_64"
+    libvirt_uri: "qemu:///system"
+    disk_size: "15G"
+    memory: "1"
+    mac: "52:54:00:ab:cb:"  # first 5 digits
+    ssh_port: "22"
+    temp_folder: "/tmp"
+
+  tasks:
+
+    - name: Ensure default vm folder exists
+      file:
+        path: "{{ libvirt_default_image_path }}"
+        state: directory
+
+    - name: "Create network {{ molecule_network_name }}"
+      virt_net:
+        command: define
+        name: "{{ molecule_network_name }}"
+        xml: "{{ lookup('template', 'network/network.xml.j2') }}"
+        uri: "{{ libvirt_uri }}"
+      when: molecule_network_name == "molecule-network"
+
+    - name: "Start network {{ molecule_network_name }}"
+      virt_net:
+        command: start
+        name: "{{ molecule_network_name }}"
+        uri: "{{ libvirt_uri }}"
+      when: molecule_network_name == "molecule-network"
+
+    - name: Get qcow2 image
+      get_url:
+        url: "https://mirror.csclub.uwaterloo.ca/fedora/linux/releases/33/Cloud/x86_64/images/Fedora-Cloud-Base-33-1.2.x86_64.qcow2"
+        dest: "{{ libvirt_default_image_path }}/{{ item.name }}.qcow2"
+        mode: '0660'
+      with_items: "{{ molecule_yml.platforms }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Generate OpenSSH keypair
+      openssh_keypair:
+        path: "{{ molecule_private_key_path }}"
+        size: 2048
+      register: ssh_key
+
+    - name: Create temporary folder
+      file:
+        path: "{{ temp_folder }}/{{ item.name }}-molecule"
+        state: directory
+      with_items: "{{ molecule_yml.platforms }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Create user-data from template
+      template:
+        src: user-data.j2
+        dest: "{{ temp_folder }}/{{ item.name }}-molecule/user-data"
+      with_items: "{{ molecule_yml.platforms }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Create meta-data from template
+      template:
+        src: meta-data.j2
+        dest: "{{ temp_folder }}/{{ item.name }}-molecule/meta-data"
+      with_items: "{{ molecule_yml.platforms }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Create cloud-init iso file
+      command:
+        "mkisofs -o
+        {{ libvirt_default_image_path }}/{{ item.name }}-cloud-init.iso
+        -V cidata -J -r user-data meta-data"
+      args:
+        chdir: "{{ temp_folder }}/{{ item.name }}-molecule"
+      with_items: "{{ molecule_yml.platforms }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Remove tempfolfer
+      file:
+        path: "{{ temp_folder }}/{{ item.name }}-molecule"
+        state: absent
+      with_items: "{{ molecule_yml.platforms }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Create an image shell with the desired size
+      command:
+        "qemu-img create -f qcow2 -o preallocation=metadata
+        {{ item.name }}-temp.qcow2 {{ disk_size }}"
+      args:
+        chdir: "{{ libvirt_default_image_path }}"
+      with_items: "{{ molecule_yml.platforms }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Expand original image on the new sized volume
+      command:
+        "virt-resize --quiet --expand /dev/sda1 {{ item.name }}.qcow2
+        {{ item.name }}-temp.qcow2"
+      args:
+        chdir: "{{ libvirt_default_image_path }}"
+      with_items: "{{ molecule_yml.platforms }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    # with this method all the XX GB of thin provisionning is copied
+    #- name: Copy temporary file to main image
+    #  copy:
+    #    src: "{{ libvirt_default_image_path }}/{{ instance_name }}-temp.qcow2"
+    #    dest: "{{ libvirt_default_image_path }}/{{ instance_name }}.qcow2"
+    #    remote_src: yes
+    #
+    #- name: Remove temporary file
+    #  file:
+    #    path: "{{ libvirt_default_image_path }}/{{ instance_name }}-temp.qcow2"
+    #    state: absent
+
+    - name: Move temporary file to main image
+      command:
+        "mv {{ item.name }}-temp.qcow2 {{ item.name }}.qcow2"
+      args:
+        chdir: "{{ libvirt_default_image_path }}"
+      with_items: "{{ molecule_yml.platforms }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Define vm from xml file
+      virt:
+        command: define
+        xml: "{{ lookup('template', 'vm/vm.xml.j2') }}"
+        uri: "{{ libvirt_uri | default(omit) }}"
+      with_items: "{{ molecule_yml.platforms }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Start molecule vm(s)
+      virt:
+        name: "{{ item.name }}"
+        command: start
+        uri: "{{ libvirt_uri | default(omit) }}"
+      with_items: "{{ molecule_yml.platforms }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: server
+
+    - debug: var=server
+
+    - name: Get instance(s) ip address
+      shell:
+        "virsh --connect {{ libvirt_uri }} domifaddr {{ item.name }} | grep {{ mac }} | awk '{ print $4 }' | sed 's/\\/.*//'"
+      with_items: "{{ molecule_yml.platforms }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: instance_ip_address
+      until: instance_ip_address.stdout != ""
+      retries: 10
+      delay: 2
+
+    # - debug: var=instance_ip_address
+
+    - when: server.changed is false #| bool
+      block:
+
+        - name: Populate instance config dict
+          set_fact:
+            instance_conf_dict: {
+              'instance': "{{ item.name }}",
+              'address': "{{ instance_ip_address.results | json_query(query) }}",
+              'user': "{{ molecule_ssh_user }}",
+              'port': "{{ ssh_port }}",
+              'identity_file': "{{ molecule_private_key_path }}", }
+          loop: "{{  molecule_yml.platforms }}"
+          loop_control:
+            label: "{{ item.name }}"
+          register: instance_config_dict
+          vars:
+            query: "[?item.name=='{{ item.name}}'].stdout | [0]"
+
+        - name: Convert instance config dict to a list
+          set_fact:
+            instance_conf: "{{ instance_config_dict.results | map(attribute='ansible_facts.instance_conf_dict') | list }}"
+
+        - name: Dump instance config
+          copy:
+            content: "{{ instance_conf | to_json | from_json | to_yaml }}"
+            dest: "{{ molecule_instance_config }}"
+            mode: 0600
+
+#
+##    - debug: var=instance_ip_address
+##
+##
+##    - name: Get VM state
+##      virt:
+##        name: "{{ instance_name }}"
+##        command: info
+##      register: instance_info
+##
+##    - name: Wait 300 seconds for port 22 to become open and contain "OpenSSH"
+##      wait_for:
+##        port: 22
+##        host: "{{ instance_ip_address.stdout }}"
+##        search_regex: OpenSSH
+##        delay: 10
+##      connection: local
