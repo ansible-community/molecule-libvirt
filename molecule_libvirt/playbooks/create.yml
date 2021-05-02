@@ -206,20 +206,3 @@
             dest: "{{ molecule_instance_config }}"
             mode: 0600
 
-#
-##    - debug: var=instance_ip_address
-##
-##
-##    - name: Get VM state
-##      virt:
-##        name: "{{ instance_name }}"
-##        command: info
-##      register: instance_info
-##
-##    - name: Wait 300 seconds for port 22 to become open and contain "OpenSSH"
-##      wait_for:
-##        port: 22
-##        host: "{{ instance_ip_address.stdout }}"
-##        search_regex: OpenSSH
-##        delay: 10
-##      connection: local
