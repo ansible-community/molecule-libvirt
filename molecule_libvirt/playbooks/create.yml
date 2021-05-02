@@ -10,13 +10,17 @@
     molecule_network_name: "molecule-network"
     molecule_ssh_user: "molecule"
     molecule_private_key_path: "{{ lookup('env', 'HOME') }}/.cache/molecule/id_ssh_rsa"
+    # libvirt_default_image_path: "{{ lookup('env', 'HOME') }}/libvirt-test"
     libvirt_default_image_path: "{{ lookup('env', 'HOME') }}/libvirt-test"
     libvirt_vm_arch: "x86_64"
-    libvirt_uri: "qemu:///system"
-    disk_size: "15G"
-    memory: "1"
-    mac: "52:54:00:ab:cb:"  # first 5 digits
-    ssh_port: "22"
+    libvirt_uri: "qemu://{{ libvirt_host | default('') }}/system"
+    default_image_url: "https://mirror.csclub.uwaterloo.ca/fedora/linux/releases/33/Cloud/x86_64/images/Fedora-Cloud-Base-33-1.2.x86_64.qcow2"
+    default_disk_size: "15G"
+    default_memory_size: "1"
+    default_vcpu: "1"
+    libvirt_host: ""
+    mac: "52:54:00:37:13:"  # first 5 digits
+    default_ssh_port: "22"
     temp_folder: "/tmp"
 
   tasks:
@@ -43,7 +47,7 @@
 
     - name: Get qcow2 image
       get_url:
-        url: "https://mirror.csclub.uwaterloo.ca/fedora/linux/releases/33/Cloud/x86_64/images/Fedora-Cloud-Base-33-1.2.x86_64.qcow2"
+        url: "{{ image_url | default(default_image_url) }}"
         dest: "{{ libvirt_default_image_path }}/{{ item.name }}.qcow2"
         mode: '0660'
       with_items: "{{ molecule_yml.platforms }}"
@@ -102,7 +106,7 @@
     - name: Create an image shell with the desired size
       command:
         "qemu-img create -f qcow2 -o preallocation=metadata
-        {{ item.name }}-temp.qcow2 {{ disk_size }}"
+        {{ item.name }}-temp.qcow2 {{ disk_size | default(default_disk_size ) }}"
       args:
         chdir: "{{ libvirt_default_image_path }}"
       with_items: "{{ molecule_yml.platforms }}"
@@ -183,7 +187,7 @@
               'instance': "{{ item.name }}",
               'address': "{{ instance_ip_address.results | json_query(query) }}",
               'user': "{{ molecule_ssh_user }}",
-              'port': "{{ ssh_port }}",
+              'port': "{{ item.ssh_port | default(default_ssh_port)}}",
               'identity_file': "{{ molecule_private_key_path }}", }
           loop: "{{  molecule_yml.platforms }}"
           loop_control:
