@@ -6,25 +6,24 @@
   gather_facts: false
   no_log: "{{ molecule_no_log }}"
   vars:
+    molecule_scenario_name: "{{ lookup('env', 'MOLECULE_SCENARIO_NAME') }}"
+    user_home_directory: "{{ lookup('env', 'HOME') }}"
     molecule_dns_suffix: "molecule.lab"
     molecule_network_name: "molecule-network"
     molecule_ssh_user: "molecule"
-    molecule_private_key_path: "{{ lookup('env', 'HOME') }}/.cache/molecule/id_ssh_rsa"
-    # libvirt_default_image_path: "{{ lookup('env', 'HOME') }}/libvirt-test"
-    libvirt_default_image_path: "{{ lookup('env', 'HOME') }}/libvirt-test"
+    molecule_private_key_path: "{{ lookup('env', 'MOLECULE_EPHEMERAL_DIRECTORY') }}/id_ssh_rsa"
+    libvirt_default_image_path: "{{ user_home_directory}}/molecule-libvirt-temp/{{ molecule_scenario_name }}/vms"
     libvirt_vm_arch: "x86_64"
     libvirt_uri: "qemu://{{ libvirt_host | default('') }}/system"
     default_image_url: "https://mirror.csclub.uwaterloo.ca/fedora/linux/releases/33/Cloud/x86_64/images/Fedora-Cloud-Base-33-1.2.x86_64.qcow2"
     default_disk_size: "15G"
     default_memory_size: "1"
     default_vcpu: "1"
-    libvirt_host: ""
-    mac: "52:54:00:37:13:"  # first 5 digits
     default_ssh_port: "22"
+    mac: "52:54:00:ab:cd:"  # first 5 digits
     temp_folder: "/tmp"
 
   tasks:
-
     - name: Ensure default vm folder exists
       file:
         path: "{{ libvirt_default_image_path }}"
@@ -106,9 +105,12 @@
     - name: Create an image shell with the desired size
       command:
         "qemu-img create -f qcow2 -o preallocation=metadata
-        {{ item.name }}-temp.qcow2 {{ disk_size | default(default_disk_size ) }}"
+        {{ item.name }}-temp.qcow2
+        {{ disk_size | default(default_disk_size ) }}"
       args:
         chdir: "{{ libvirt_default_image_path }}"
+      environment:
+        LIBGUESTFS_BACKEND: direct
       with_items: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
@@ -122,18 +124,6 @@
       with_items: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
-
-    # with this method all the XX GB of thin provisionning is copied
-    #- name: Copy temporary file to main image
-    #  copy:
-    #    src: "{{ libvirt_default_image_path }}/{{ instance_name }}-temp.qcow2"
-    #    dest: "{{ libvirt_default_image_path }}/{{ instance_name }}.qcow2"
-    #    remote_src: yes
-    #
-    #- name: Remove temporary file
-    #  file:
-    #    path: "{{ libvirt_default_image_path }}/{{ instance_name }}-temp.qcow2"
-    #    state: absent
 
     - name: Move temporary file to main image
       command:
@@ -163,11 +153,13 @@
         label: "{{ item.name }}"
       register: server
 
-    - debug: var=server
-
     - name: Get instance(s) ip address
-      shell:
-        "virsh --connect {{ libvirt_uri }} domifaddr {{ item.name }} | grep {{ mac }} | awk '{ print $4 }' | sed 's/\\/.*//'"
+      shell: >
+        virsh --connect {{ libvirt_uri }}
+        domifaddr {{ item.name }} |
+        grep {{ mac }} |
+        awk '{ print $4 }' |
+        sed 's/\/.*//'
       with_items: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
@@ -176,9 +168,7 @@
       retries: 10
       delay: 2
 
-    # - debug: var=instance_ip_address
-
-    - when: server.changed is false #| bool
+    - when: instance_ip_address.changed is true | bool
       block:
 
         - name: Populate instance config dict
@@ -188,7 +178,8 @@
               'address': "{{ instance_ip_address.results | json_query(query) }}",
               'user': "{{ molecule_ssh_user }}",
               'port': "{{ item.ssh_port | default(default_ssh_port)}}",
-              'identity_file': "{{ molecule_private_key_path }}", }
+              'identity_file': "{{ molecule_private_key_path }}",
+            }
           loop: "{{  molecule_yml.platforms }}"
           loop_control:
             label: "{{ item.name }}"
@@ -205,4 +196,3 @@
             content: "{{ instance_conf | to_json | from_json | to_yaml }}"
             dest: "{{ molecule_instance_config }}"
             mode: 0600
-
