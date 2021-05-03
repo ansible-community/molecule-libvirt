@@ -9,10 +9,16 @@
     molecule_dns_suffix: "molecule.lab"
     molecule_network_name: "molecule-network"
     molecule_ssh_user: molecule
-    libvirt_default_image_path: "{{ lookup('env', 'HOME') }}/libvirt-test"
-    libvirt_uri: "qemu:///system"
+    molecule_scenario_name: "{{ lookup('env', 'MOLECULE_SCENARIO_NAME') }}"
+    user_home_directory: "{{ lookup('env', 'HOME') }}"
+    libvirt_default_image_path: "{{ user_home_directory}}/molecule-libvirt-temp/{{ molecule_scenario_name }}/vms"
+    libvirt_uri: "qemu://{{ libvirt_host | default('') }}/system"
     libvirt_vm_arch: x86_64
     temp_folder: "/tmp"
+
+    ssh_port: 22
+    mac: "52:54:00:37:13:"  # first 5 digits
+    molecule_private_key_path: "/tmp/id_rsa"
 
   tasks:
 
@@ -33,20 +39,6 @@
         label: "{{ item.name }}"
       when: item.name in instance_list.list_vms
 
-##    - name: Destroy molecule instance(s)
-##      debug:
-##        msg: "This is destroy phase"
-##      with_items: "{{ molecule_yml.platforms }}"
-##      loop_control:
-##        label: "{{ item.name }}"
-#
-##    - name: Get running instance(s) name
-##      set_fact:
-##        running_instance: "{{ instance_status.results | json_query(jmesquery) }}"
-##      vars:
-##        jmesquery: "[?status=='running'].item.name"
-##[?item.name=='instance-2'].status
-
     - name: Stop molecule instance(s)
       virt:
         name: "{{ item.name }}"
@@ -55,9 +47,11 @@
       loop: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
-      when: (item.name in instance_list.list_vms) and (instance_status.results | json_query(jmesquery)) == 'running'
+      when: (item.name in instance_list.list_vms) and
+            (instance_status.results |
+            json_query(jmesquery)) == 'running'
       vars:
-         jmesquery: "[?item.name=='{{ item.name }}'].status | [0]"
+        jmesquery: "[?item.name=='{{ item.name }}'].status | [0]"
 
     - name: Destroy and undefine molecule instance(s)
       virt:
