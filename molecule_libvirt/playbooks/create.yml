@@ -12,9 +12,9 @@
     molecule_network_name: "molecule-network"
     molecule_ssh_user: "molecule"
     molecule_private_key_path: "{{ lookup('env', 'MOLECULE_EPHEMERAL_DIRECTORY') }}/id_ssh_rsa"
-    libvirt_default_image_path: "{{ user_home_directory}}/molecule-libvirt-temp/{{ molecule_scenario_name }}/vms"
+    libvirt_default_image_path: "{{ user_home_directory}}/.local/molecule-libvirt-temp/{{ molecule_scenario_name }}/vms"
     libvirt_vm_arch: "x86_64"
-    libvirt_uri: "qemu://{{ libvirt_host | default('') }}/system"
+    libvirt_uri: "qemu:///system"
     default_image_url: "https://mirror.csclub.uwaterloo.ca/fedora/linux/releases/33/Cloud/x86_64/images/Fedora-Cloud-Base-33-1.2.x86_64.qcow2"
     default_disk_size: "15G"
     default_memory_size: "1"
@@ -24,6 +24,7 @@
     temp_folder: "/tmp"
 
   tasks:
+
     - name: Ensure default vm folder exists
       file:
         path: "{{ libvirt_default_image_path }}"

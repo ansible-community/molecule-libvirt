@@ -11,8 +11,8 @@
     molecule_ssh_user: molecule
     molecule_scenario_name: "{{ lookup('env', 'MOLECULE_SCENARIO_NAME') }}"
     user_home_directory: "{{ lookup('env', 'HOME') }}"
-    libvirt_default_image_path: "{{ user_home_directory}}/molecule-libvirt-temp/{{ molecule_scenario_name }}/vms"
-    libvirt_uri: "qemu://{{ libvirt_host | default('') }}/system"
+    libvirt_default_image_path: "{{ user_home_directory}}/.local/molecule-libvirt-temp/{{ molecule_scenario_name }}/vms"
+    libvirt_uri: "qemu:///system"
     libvirt_vm_arch: x86_64
     temp_folder: "/tmp"
 
@@ -98,3 +98,8 @@
       with_items: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
+
+    - name: Remove folder molecule vms folder
+      file:
+        path: "{{ user_home_directory}}/.local/molecule-libvirt-temp"
+        state: absent
