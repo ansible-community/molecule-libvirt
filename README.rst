@@ -54,6 +54,8 @@ Get Involved
 Authors
 =======
 
+* James Regis
+* Gaëtan Trellu
 * Gariele Cerami
 * Sorin Sbarnea
 
