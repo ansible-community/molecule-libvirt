@@ -63,11 +63,11 @@ This is a molecule.yml example file
       libvirt_user: "james"
     - name: instance-2
       image: fedora33
-      memory: 1048
+      memory: 1G
       cpus: 1
     - name: instance-3
        image: fedora34
-       memory: 2048
+       memory: 2G
        cpus: 1
   provisioner:
     name: ansible
