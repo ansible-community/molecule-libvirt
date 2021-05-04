@@ -31,6 +31,63 @@ resources.
 Please note that this driver is currently in its early stage of development,
 do not even try to install or use it until this message is removed.
 
+.. _quickstart:
+
+Quickstart
+==========
+
+Installation
+------------
+.. code-block:: bash
+
+   pip install molecule-libvirt
+
+Example
+-------
+This is a molecule.yml example file
+
+.. code-block:: yaml
+
+  dependency:
+    name: galaxy
+  driver:
+    name: libvirt
+  platforms:
+    - name: instance-1
+      cpu: 1
+      image_url: "https://mirror.csclub.uwaterloo.ca/fedora/linux/releases/33/Cloud/x86_64/images/Fedora-Cloud-Base-33-1.2.x86_64.qcow2"
+      disk_size: "10G"
+      ssh_port: 22
+      memory_size: "1" # in GB
+      libvirt_host: "server.home.lan"
+      libvirt_user: "james"
+    - name: instance-2
+      image: fedora33
+      memory: 1048
+      cpus: 1
+    - name: instance-3
+       image: fedora34
+       memory: 2048
+       cpus: 1
+  provisioner:
+    name: ansible
+  verifier:
+    name: ansible
+
+All you need to do is fill in the subnet-id you want
+to create your test instance into.
+Then run
+
+.. code-block:: bash
+
+   molecule test
+
+
+Documentation
+=============
+
+Read the documentation and more at https://molecule.readthedocs.io/.
+
 .. _get-involved:
 
 Get Involved
