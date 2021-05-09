@@ -49,7 +49,7 @@ This is a molecule.yml example file
 .. code-block:: yaml
 
   dependency:
-    name: galaxy
+  name: galaxy
   driver:
     name: libvirt
   platforms:
@@ -59,23 +59,28 @@ This is a molecule.yml example file
       disk_size: "10G"
       ssh_port: 22
       memory_size: "1" # in GB
+    - name: instance-2
+      memory: "1"
+      cpus: 1
+      image_url: "https://mirror.csclub.uwaterloo.ca/fedora/linux/releases/33/Cloud/x86_64/images/Fedora-Cloud-Base-33-1.2.x86_64.qcow2"
       libvirt_host: "server.home.lan"
       libvirt_user: "james"
-    - name: instance-2
-      image: fedora33
-      memory: 1G
-      cpus: 1
+      bridge_name: "bridge0"
     - name: instance-3
-       image: fedora34
-       memory: 2G
-       cpus: 1
+      memory: "1"
+      cpus: 1
+      image_url: "https://mirror.csclub.uwaterloo.ca/fedora/linux/releases/33/Cloud/x86_64/images/Fedora-Cloud-Base-33-1.2.x86_64.qcow2"
+      libvirt_host: "server.home.lan"
+      libvirt_user: "james"
+      bridge_name: "bridge0"
   provisioner:
     name: ansible
   verifier:
     name: ansible
+  
 
-All you need to do is fill in the subnet-id you want
-to create your test instance into.
+All you need to do is fill in the remote host name, the remote user and 
+the bridge name  you want to create your test instance into.
 Then run
 
 .. code-block:: bash
