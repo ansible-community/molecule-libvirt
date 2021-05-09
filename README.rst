@@ -77,9 +77,9 @@ This is a molecule.yml example file
     name: ansible
   verifier:
     name: ansible
-  
 
-All you need to do is fill in the remote host name, the remote user and 
+
+All you need to do is fill in the remote host name, the remote user and
 the bridge name  you want to create your test instance into.
 Then run
 
