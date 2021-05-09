@@ -2,17 +2,16 @@
 
 - name: Create
   hosts: localhost
-  connection: local
   gather_facts: false
   no_log: "{{ molecule_no_log }}"
   vars:
     molecule_scenario_name: "{{ lookup('env', 'MOLECULE_SCENARIO_NAME') }}"
     user_home_directory: "{{ lookup('env', 'HOME') }}"
     molecule_dns_suffix: "molecule.lab"
-    molecule_network_name: "molecule-network"
+    molecule_network_name: "molecule-libvirt"
     molecule_ssh_user: "molecule"
     molecule_private_key_path: "{{ lookup('env', 'MOLECULE_EPHEMERAL_DIRECTORY') }}/id_ssh_rsa"
-    libvirt_default_image_path: "{{ user_home_directory}}/.local/molecule-libvirt-temp/{{ molecule_scenario_name }}/vms"
+    libvirt_default_image_path: "{{ user_home_directory}}/.local/molecule/{{ molecule_scenario_name }}/vms"
     libvirt_vm_arch: "x86_64"
     libvirt_uri: "qemu:///system"
     default_image_url: "https://mirror.csclub.uwaterloo.ca/fedora/linux/releases/33/Cloud/x86_64/images/Fedora-Cloud-Base-33-1.2.x86_64.qcow2"
@@ -29,21 +28,45 @@
       file:
         path: "{{ libvirt_default_image_path }}"
         state: directory
+      with_items: "{{ molecule_yml.platforms }}"
+      loop_control:
+        label: "{{ item.name }}"
+      delegate_to: "{{ item.libvirt_host if item.libvirt_host is defined else 'localhost' }}"
+
+    - name: Allow qemu process read qcow2 images in home directory
+      acl:
+        path: "{{ user_home_directory }}"
+        entity: qemu
+        etype: user
+        permissions: x
+        state: present
+      with_items: "{{ molecule_yml.platforms }}"
+      loop_control:
+        label: "{{ item.name }}"
+      delegate_to: "{{ item.libvirt_host if item.libvirt_host is defined else 'localhost' }}"
 
     - name: "Create network {{ molecule_network_name }}"
       virt_net:
         command: define
         name: "{{ molecule_network_name }}"
         xml: "{{ lookup('template', 'network/network.xml.j2') }}"
-        uri: "{{ libvirt_uri }}"
-      when: molecule_network_name == "molecule-network"
+        uri: "{{ qemu_uri }}"
+      with_items: "{{ molecule_yml.platforms }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when: item.network_name is not defined
+      vars:
+        qemu_uri: "{{ 'qemu+ssh://'+item.libvirt_user+'@'+item.libvirt_host+'/system' if item.libvirt_host is defined else libvirt_uri }}"
 
     - name: "Start network {{ molecule_network_name }}"
       virt_net:
         command: start
         name: "{{ molecule_network_name }}"
-        uri: "{{ libvirt_uri }}"
-      when: molecule_network_name == "molecule-network"
+        uri: "{{ 'qemu+ssh://'+item.libvirt_user+'@'+item.libvirt_host+'/system' if item.libvirt_host is defined else libvirt_uri }}"
+      with_items: "{{ molecule_yml.platforms }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when: item.network_name is not defined
 
     - name: Get qcow2 image
       get_url:
@@ -53,12 +76,14 @@
       with_items: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
+      delegate_to: "{{ item.libvirt_host | default('localhost') }}"
 
     - name: Generate OpenSSH key pair
       openssh_keypair:
         path: "{{ molecule_private_key_path }}"
         size: 2048
       register: ssh_key
+      delegate_to: "localhost"
 
     - name: Create temporary folder
       file:
@@ -67,6 +92,7 @@
       with_items: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
+      delegate_to: "{{ item.libvirt_host | default('localhost') }}"
 
     - name: Create user-data from template
       template:
@@ -75,6 +101,7 @@
       with_items: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
+      delegate_to: "{{ item.libvirt_host | default('localhost') }}"
 
     - name: Create meta-data from template
       template:
@@ -83,6 +110,7 @@
       with_items: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
+      delegate_to: "{{ item.libvirt_host | default('localhost') }}"
 
     - name: Create cloud-init iso file
       command:
@@ -94,6 +122,7 @@
       with_items: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
+      delegate_to: "{{ item.libvirt_host | default('localhost') }}"
 
     - name: Remove tempfolfer
       file:
@@ -102,6 +131,7 @@
       with_items: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
+      delegate_to: "{{ item.libvirt_host | default('localhost') }}"
 
     - name: Create an image shell with the desired size
       command:
@@ -115,6 +145,7 @@
       with_items: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
+      delegate_to: "{{ item.libvirt_host | default('localhost') }}"
 
     - name: Expand original image on the new sized volume
       command:
@@ -125,6 +156,7 @@
       with_items: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
+      delegate_to: "{{ item.libvirt_host | default('localhost') }}"
 
     - name: Move temporary file to main image
       command:
@@ -134,21 +166,23 @@
       with_items: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
+      delegate_to: "{{ item.libvirt_host if item.libvirt_host is defined else 'localhost' }}"
 
     - name: Define vm from xml file
       virt:
         command: define
         xml: "{{ lookup('template', 'vm/vm.xml.j2') }}"
-        uri: "{{ libvirt_uri | default(omit) }}"
+        uri: "{{ 'qemu+ssh://'+item.libvirt_user+'@'+item.libvirt_host+'/system' if item.libvirt_host is defined else libvirt_uri }}"
       with_items: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
+      # delegate_to: "{{ item.libvirt_host if item.libvirt_host is defined else 'localhost' }}"
 
     - name: Start molecule vm(s)
       virt:
         name: "{{ item.name }}"
         command: start
-        uri: "{{ libvirt_uri | default(omit) }}"
+        uri: "{{ 'qemu+ssh://'+item.libvirt_user+'@'+item.libvirt_host+'/system' if item.libvirt_host is defined else libvirt_uri }}"
       with_items: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
@@ -156,7 +190,7 @@
 
     - name: Get instance(s) ip address
       shell: >
-        virsh --connect {{ libvirt_uri }}
+        virsh --connect {{ qemu_uri }}
         domifaddr {{ item.name }} |
         grep {{ mac }} |
         awk '{ print $4 }' |
@@ -164,19 +198,46 @@
       with_items: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
-      register: instance_ip_address
-      until: instance_ip_address.stdout != ""
+      register: instance_ip_address_local
+      until: instance_ip_address_local.stdout != ""
       retries: 10
       delay: 2
+      vars:
+        qemu_uri: "{{ 'qemu+ssh://'+item.libvirt_user+'@'+item.libvirt_host+'/system' if item.libvirt_host is defined else libvirt_uri }}"
+      when: item.bridge_name is not defined
 
-    - when: instance_ip_address.changed is true | bool
+    - name: Wait 35 seconds for arp table update
+      pause:
+        seconds: 35
+      vars:
+        jmesquery: "[].bridge_name"
+      when: (molecule_yml.platforms | from_yaml | json_query(jmesquery)) != []
+
+    - name: Get instance(s) running on remote host(s)
+      shell: >
+        arp -n {{ item.name }} |
+        grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b"
+      with_items: "{{ molecule_yml.platforms }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: instance_ip_address_remote
+      when: item.bridge_name is defined
+
+    - name:  Merge ip addresses lists
+      set_fact:
+        instance_ip_address: "{{ (instance_ip_address_local.results |
+        json_query('[?stdout].{name: item.name, stdout: stdout}')) +
+        (instance_ip_address_remote.results |
+        json_query('[?stdout].{name: item.name, stdout: stdout}')) }}"
+
+    - when: instance_ip_address != []
       block:
 
         - name: Populate instance config dict
           set_fact:
             instance_conf_dict: {
               'instance': "{{ item.name }}",
-              'address': "{{ instance_ip_address.results | json_query(query) }}",
+              'address': "{{ instance_ip_address | json_query(query) }}",
               'user': "{{ molecule_ssh_user }}",
               'port': "{{ item.ssh_port | default(default_ssh_port)}}",
               'identity_file': "{{ molecule_private_key_path }}",
@@ -186,7 +247,7 @@
             label: "{{ item.name }}"
           register: instance_config_dict
           vars:
-            query: "[?item.name=='{{ item.name}}'].stdout | [0]"
+            query: "[?name=='{{ item.name}}'].stdout | [0]"
 
         - name: Convert instance config dict to a list
           set_fact:
