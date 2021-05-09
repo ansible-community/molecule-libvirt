@@ -26,5 +26,5 @@ timezone: America/Toronto
 
 # Remove cloud-init
 runcmd:
-  - systemctl stop network && systemctl start network
-  - yum -y remove cloud-init
+  - systemctl restart network
+  - dnf -y remove cloud-init
