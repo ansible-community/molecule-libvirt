@@ -88,14 +88,14 @@
       with_items: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
-      when: item.bridge_name is not defined # or item.molecule_network_name == molecule_network_name
+      when: item.bridge_name is not defined
       ignore_errors: true
 
     - name: Destroy molecule network
       virt_net:
-          command: destroy
-          name: "{{ molecule_network_name }}"
-          uri: "{{ 'qemu+ssh://'+item.libvirt_user+'@'+item.libvirt_host+'/system' if item.libvirt_host is defined else libvirt_uri }}"
+        command: destroy
+        name: "{{ molecule_network_name }}"
+        uri: "{{ 'qemu+ssh://'+item.libvirt_user+'@'+item.libvirt_host+'/system' if item.libvirt_host is defined else libvirt_uri }}"
       with_items: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
@@ -104,9 +104,9 @@
 
     - name: Undefine molecule network
       virt_net:
-          command: undefine
-          name: "{{ molecule_network_name }}"
-          uri: "{{ 'qemu+ssh://'+item.libvirt_user+'@'+item.libvirt_host+'/system' if item.libvirt_host is defined else libvirt_uri }}"
+        command: undefine
+        name: "{{ molecule_network_name }}"
+        uri: "{{ 'qemu+ssh://'+item.libvirt_user+'@'+item.libvirt_host+'/system' if item.libvirt_host is defined else libvirt_uri }}"
       with_items: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"

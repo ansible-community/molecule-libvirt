@@ -176,7 +176,6 @@
       with_items: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
-      # delegate_to: "{{ item.libvirt_host if item.libvirt_host is defined else 'localhost' }}"
 
     - name: Start molecule vm(s)
       virt:
@@ -223,7 +222,7 @@
       register: instance_ip_address_remote
       when: item.bridge_name is defined
 
-    - name:  Merge ip addresses lists
+    - name: Merge ip addresses lists
       set_fact:
         instance_ip_address: "{{ (instance_ip_address_local.results |
         json_query('[?stdout].{name: item.name, stdout: stdout}')) +
