@@ -29,8 +29,6 @@
       loop_control:
         label: "{{ item.name }}"
 
-    - debug: var=instance_list
-
     - name: Check if molecule instance(s) is/are running
       virt:
         command: status
@@ -80,6 +78,11 @@
       loop_control:
         label: "{{ item.name }}"
 
+    - name: Create custom network dict
+      set_fact:
+        instance_and_net_list: "{{ net_list.results |
+        json_query('[].{name: item.name, network: list_nets}') }}"
+
     - name: Stop molecule custom network
       virt_net:
         command: stop
@@ -88,8 +91,11 @@
       with_items: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
-      when: item.bridge_name is not defined
-      ignore_errors: true
+      when: item.bridge_name is not defined and
+        molecule_network_name in (instance_and_net_list |
+        json_query(jmesquery))
+      vars:
+        jmesquery: "[?name=='{{ item.name }}'].network[]"
 
     - name: Destroy molecule network
       virt_net:
@@ -99,8 +105,11 @@
       with_items: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
-      when: item.bridge_name is not defined
-      ignore_errors: true
+      when: item.bridge_name is not defined and
+        molecule_network_name in (instance_and_net_list |
+        json_query(jmesquery))
+      vars:
+        jmesquery: "[?name=='{{ item.name }}'].network[]"
 
     - name: Undefine molecule network
       virt_net:
