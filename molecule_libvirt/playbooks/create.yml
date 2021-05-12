@@ -9,6 +9,7 @@
     user_home_directory: "{{ lookup('env', 'HOME') }}"
     molecule_dns_suffix: "molecule.lab"
     molecule_network_name: "molecule-libvirt"
+    molecule_bridge: "molecule-br0"
     molecule_ssh_user: "molecule"
     molecule_private_key_path: "{{ lookup('env', 'MOLECULE_EPHEMERAL_DIRECTORY') }}/id_ssh_rsa"
     libvirt_default_image_path: "{{ user_home_directory}}/.local/molecule/{{ molecule_scenario_name }}/vms"
@@ -53,7 +54,7 @@
       loop: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
-      when: item.network_name is not defined
+      when: (item.network_name is not defined) # and (item.molecule_bridge is defined)
       vars:
         qemu_uri: "{{ 'qemu+ssh://'+item.libvirt_user+'@'+item.libvirt_host+'/system' if item.libvirt_host is defined else libvirt_uri }}"
 
@@ -65,7 +66,7 @@
       loop: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
-      when: item.network_name is not defined
+      when: (item.network_name is not defined) # and (item.molecule_bridge is defined)
 
     - name: Get qcow2 image
       ansible.builtin.get_url:
@@ -80,7 +81,7 @@
     - name: Generate OpenSSH key pair
       community.crypto.openssh_keypair:
         path: "{{ molecule_private_key_path }}"
-        size: 2048
+        size: 4096
       register: ssh_key
       delegate_to: "localhost"
 

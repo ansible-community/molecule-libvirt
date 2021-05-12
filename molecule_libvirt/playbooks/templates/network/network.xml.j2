@@ -1,6 +1,6 @@
 <network>
-  <name>{{ molecule_network_name }}</name>
-  <bridge name="molecule0"/>
+  <name>{{ item.molecule_network_name if item.molecule_network_name is defined else molecule_network_name }}</name>
+  <bridge name="{{ item.molecule_bridge if item.molecule_bridge is defined else molecule_bridge }}"/>
   <forward/>
   <ip address="10.10.10.1" netmask="255.255.255.0">
     <dhcp>
