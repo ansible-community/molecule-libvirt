@@ -1,28 +1,47 @@
----
-# zuul.d/layout.yaml
+- job:
+    name: molecule-libvirt-fedora
+    description: Run py38 tox environment
+    parent: ansible-tox-py38
+    nodeset: fedora-latest-1vcpu
+    attempts: 1
+    vars:
+      tox_envlist: py38
+    timeout: 5400  # 1.5h
+
+- job:
+    name: molecule-libvirt-centos
+    description: Run py36 tox environment
+    parent: ansible-tox-py36
+    nodeset: centos-8-1vcpu
+    attempts: 1
+    vars:
+      tox_envlist: py36
+    timeout: 3600
+
+- job:
+    name: molecule-libvirt-devel-centos
+    description: Run devel tox environment
+    parent: ansible-tox-py36
+    nodeset: centos-8-1vcpu
+    attempts: 1
+    vars:
+      tox_envlist: devel
+    timeout: 3600
+
+- job:
+    name: molecule-libvirt-ubuntu-bionic
+    description: Run py36 tox environment
+    parent: ansible-tox-py36
+    nodeset: ubuntu-bionic-1vcpu
+    attempts: 1
+    vars:
+      tox_envlist: py36
+    timeout: 3600
 
 - project:
     check:
       jobs: &defaults
-        # tier 1
-        - molecule-tox-linters
-        - molecule-tox-packaging
-        - molecule-tox-py36-centos-8:
-            vars:
-              tox_environment:
-                PYTEST_REQPASS: 1
-        - molecule-tox-py36-ubuntu-bionic:
-            vars:
-              tox_environment:
-                PYTEST_REQPASS: 1
-        - molecule-tox-py37-fedora-30:
-            voting: false
-            vars:
-              tox_environment:
-                PYTEST_REQPASS: 1
-        - molecule-tox-devel-centos-8:
-            vars:
-              tox_environment:
-                PYTEST_REQPASS: 1
-    gate:
-      jobs: *defaults
+        - molecule-libvirt-centos
+        - molecule-libvirt-fedora
+        - molecule-libvirt-devel-centos
+        - molecule-libvirt-ubuntu-bionic
