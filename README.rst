@@ -44,7 +44,7 @@ Installation
 
 Example
 -------
-This is a molecule.yml example file
+This is a `molecule.yml` example file
 
 .. code-block:: yaml
 
