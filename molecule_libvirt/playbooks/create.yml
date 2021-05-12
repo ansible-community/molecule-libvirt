@@ -175,7 +175,6 @@
       loop: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
-      # delegate_to: "{{ item.libvirt_host if item.libvirt_host is defined else 'localhost' }}"
 
     - name: Start molecule vm(s)
       community.libvirt.virt:
@@ -222,12 +221,12 @@
       register: instance_ip_address_remote
       when: item.bridge_name is defined
 
-    - name:  Merge ip address list
+    - name: Merge ip address list
       ansible.builtin.set_fact:
         instance_ip_address: "{{ (instance_ip_address_local.results |
-        json_query('[?stdout].{name: item.name, stdout: stdout}')) +
-        (instance_ip_address_remote.results |
-        json_query('[?stdout].{name: item.name, stdout: stdout}')) }}"
+          json_query('[?stdout].{name: item.name, stdout: stdout}')) +
+          (instance_ip_address_remote.results |
+          json_query('[?stdout].{name: item.name, stdout: stdout}')) }}"
 
     - when: instance_ip_address != []
       block:
