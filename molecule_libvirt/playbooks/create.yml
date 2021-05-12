@@ -20,6 +20,7 @@
     default_memory_size: "1"
     default_vcpu: "1"
     default_ssh_port: "22"
+    qemu_user: "qemu"
     mac: "52:54:00:ab:cd:"  # first 5 two-digit hexadecimal numbers
     temp_folder: "/tmp"
 
@@ -36,7 +37,7 @@
     - name: Allow qemu process read qcow2 images in home directory
       ansible.posix.acl:
         path: "{{ user_home_directory }}"
-        entity: qemu
+        entity: "{{ item.qemu_user | default(qemu_user) }}"
         etype: user
         permissions: x
         state: present
@@ -54,7 +55,7 @@
       loop: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
-      when: (item.network_name is not defined) # and (item.molecule_bridge is defined)
+      when: (item.network_name is not defined)
       vars:
         qemu_uri: "{{ 'qemu+ssh://'+item.libvirt_user+'@'+item.libvirt_host+'/system' if item.libvirt_host is defined else libvirt_uri }}"
 
@@ -66,7 +67,7 @@
       loop: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
-      when: (item.network_name is not defined) # and (item.molecule_bridge is defined)
+      when: (item.network_name is not defined)
 
     - name: Get qcow2 image
       ansible.builtin.get_url:
