@@ -1,9 +1,9 @@
 ---
-
 - name: Destroy
   hosts: localhost
   gather_facts: false
   no_log: "{{ molecule_no_log }}"
+
   vars:
     molecule_dns_suffix: "molecule.lab"
     molecule_network_name: "molecule-libvirt"
@@ -13,29 +13,24 @@
     libvirt_default_image_path: "{{ user_home_directory}}/.local/molecule/{{ molecule_scenario_name }}/vms"
     libvirt_uri: "qemu:///system"
     libvirt_vm_arch: x86_64
-    temp_folder: "/tmp"
-
-    ssh_port: 22
-    mac: "52:54:00:37:13:"  # first 5 digits
 
   tasks:
-
     - name: Get list of all instances
-      virt:
+      community.libvirt.virt:
         command: list_vms
         uri: "{{ 'qemu+ssh://'+item.libvirt_user+'@'+item.libvirt_host+'/system' if item.libvirt_host is defined else libvirt_uri }}"
       register: instance_list
-      with_items: "{{ molecule_yml.platforms }}"
+      loop: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
 
     - name: Check if molecule instance(s) is/are running
-      virt:
+      community.libvirt.virt:
         command: status
         name: "{{ item.name }}"
         uri: "{{ 'qemu+ssh://'+item.libvirt_user+'@'+item.libvirt_host+'/system' if item.libvirt_host is defined else libvirt_uri }}"
       register: instance_status
-      with_items: "{{ molecule_yml.platforms }}"
+      loop: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
       when: (instance_list | json_query(jmesquery)) != []
@@ -43,7 +38,7 @@
         jmesquery: "results[?item.name=='{{ item.name }}'].list_vms[?contains(@, '{{ item.name }}')]"
 
     - name: Stop molecule instance(s)
-      virt:
+      community.libvirt.virt:
         name: "{{ item.name }}"
         command: shutdown
         uri: "{{ 'qemu+ssh://'+item.libvirt_user+'@'+item.libvirt_host+'/system' if item.libvirt_host is defined else libvirt_uri }}"
@@ -58,11 +53,11 @@
         jmesquery_2: "[?item.name=='{{ item.name }}'].status | [0]"
 
     - name: Destroy and undefine molecule instance(s)
-      virt:
+      community.libvirt.virt:
         name: "{{ item.name }}"
         command: undefine
         uri: "{{ 'qemu+ssh://'+item.libvirt_user+'@'+item.libvirt_host+'/system' if item.libvirt_host is defined else libvirt_uri }}"
-      with_items: "{{ molecule_yml.platforms }}"
+      loop: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
       when: (instance_list | json_query(jmesquery)) != []
@@ -70,25 +65,25 @@
         jmesquery: "results[?item.name=='{{ item.name }}'].list_vms[?contains(@, '{{ item.name }}')]"
 
     - name: Get libvirt vnet list
-      virt_net:
+      community.libvirt.virt_net:
         command: list_nets
         uri: "{{ 'qemu+ssh://'+item.libvirt_user+'@'+item.libvirt_host+'/system' if item.libvirt_host is defined else libvirt_uri }}"
       register: net_list
-      with_items: "{{ molecule_yml.platforms }}"
+      loop: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
 
     - name: Create custom network dict
-      set_fact:
+      ansible.builtin.set_fact:
         instance_and_net_list: "{{ net_list.results |
         json_query('[].{name: item.name, network: list_nets}') }}"
 
     - name: Stop molecule custom network
-      virt_net:
+      community.libvirt.virt_net:
         command: stop
         name: "{{ molecule_network_name }}"
         uri: "{{ 'qemu+ssh://'+item.libvirt_user+'@'+item.libvirt_host+'/system' if item.libvirt_host is defined else libvirt_uri }}"
-      with_items: "{{ molecule_yml.platforms }}"
+      loop: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
       when: item.bridge_name is not defined and
@@ -98,11 +93,11 @@
         jmesquery: "[?name=='{{ item.name }}'].network[]"
 
     - name: Destroy molecule network
-      virt_net:
+      community.libvirt.virt_net:
         command: destroy
         name: "{{ molecule_network_name }}"
         uri: "{{ 'qemu+ssh://'+item.libvirt_user+'@'+item.libvirt_host+'/system' if item.libvirt_host is defined else libvirt_uri }}"
-      with_items: "{{ molecule_yml.platforms }}"
+      loop: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
       when: item.bridge_name is not defined and
@@ -112,35 +107,35 @@
         jmesquery: "[?name=='{{ item.name }}'].network[]"
 
     - name: Undefine molecule network
-      virt_net:
+      community.libvirt.virt_net:
         command: undefine
         name: "{{ molecule_network_name }}"
         uri: "{{ 'qemu+ssh://'+item.libvirt_user+'@'+item.libvirt_host+'/system' if item.libvirt_host is defined else libvirt_uri }}"
-      with_items: "{{ molecule_yml.platforms }}"
+      loop: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
       when: item.bridge_name is not defined
 
     - name: Remove vm image(s)
-      file:
+      ansible.builtin.file:
         path: "{{ libvirt_default_image_path }}/{{ item.name }}.qcow2"
         state: absent
-      with_items: "{{ molecule_yml.platforms }}"
+      loop: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
       delegate_to: "{{ item.libvirt_host if item.libvirt_host is defined else 'localhost' }}"
 
     - name: Remove cloud-init iso image(s)
-      file:
+      ansible.builtin.file:
         path: "{{ libvirt_default_image_path }}/{{ item.name }}-cloud-init.iso"
         state: absent
-      with_items: "{{ molecule_yml.platforms }}"
+      loop: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
       delegate_to: "{{ item.libvirt_host if item.libvirt_host is defined else 'localhost' }}"
 
     - name: Remove folder molecule vms folder
-      file:
+      ansible.builtin.file:
         path: "{{ user_home_directory}}/.local/molecule-libvirt-temp"
         state: absent
       delegate_to: "{{ item.libvirt_host if item.libvirt_host is defined else 'localhost' }}"
