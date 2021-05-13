@@ -1,5 +1,5 @@
 <network>
-  <name>{{ item.molecule_network_name if item.molecule_network_name is defined else molecule_network_name }}</name>
+  <name>{{ molecule_network_name }}</name>
   <bridge name="{{ item.molecule_bridge if item.molecule_bridge is defined else molecule_bridge }}"/>
   <forward/>
   <ip address="{{ (item.molecule_network_cidr if item.molecule_network_cidr is defined else molecule_network_cidr ) | ansible.netcommon.ipaddr('next_usable') }}" netmask="{{ (item.molecule_network_cidr if item.molecule_network_cidr is defined else molecule_network_cidr ) | ansible.netcommon.ipaddr('netmask') }}">

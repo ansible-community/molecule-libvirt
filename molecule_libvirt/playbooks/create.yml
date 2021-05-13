@@ -22,7 +22,7 @@
     default_ssh_port: "22"
     qemu_user: "qemu"
     mac: "52:54:00:ab:cd:"  # first 5 two-digit hexadecimal numbers
-    molecule_network_cidr: "10.10.10.1/24"
+    molecule_network_cidr: "10.10.10.0/24"
     temp_folder: "/tmp"
 
   tasks:
@@ -47,7 +47,7 @@
         label: "{{ item.name }}"
       delegate_to: "{{ item.libvirt_host if item.libvirt_host is defined else 'localhost' }}"
 
-    - name: "Create network {{ molecule_network_name }}"
+    - name: Create network molecule network
       community.libvirt.virt_net:
         command: define
         name: "{{ molecule_network_name }}"
@@ -56,11 +56,11 @@
       loop: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
-      when: (item.network_name is not defined)
+      when: (item.network_name is not defined) and (item.bridge_name is not defined)
       vars:
         qemu_uri: "{{ 'qemu+ssh://'+item.libvirt_user+'@'+item.libvirt_host+'/system' if item.libvirt_host is defined else libvirt_uri }}"
 
-    - name: "Start network {{ molecule_network_name }}"
+    - name: Start network molecule network
       community.libvirt.virt_net:
         command: start
         name: "{{ molecule_network_name }}"
@@ -68,7 +68,7 @@
       loop: "{{ molecule_yml.platforms }}"
       loop_control:
         label: "{{ item.name }}"
-      when: (item.network_name is not defined)
+      when: (item.network_name is not defined) and (item.bridge_name is not defined)
 
     - name: Get qcow2 image
       ansible.builtin.get_url:

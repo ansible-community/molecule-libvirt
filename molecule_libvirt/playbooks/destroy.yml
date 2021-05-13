@@ -16,21 +16,6 @@
 
   tasks:
 
-    # - set_fact:
-    #     first_usable_ip: "{{ item.molecule_network_cidr | ansible.netcommon.ipaddr('next_usable') }}"
-    #     second_useable_ip: "{{ item.molecule_network_cidr | ansible.netcommon.next_nth_usable(2) }}"
-    #     netmask: "{{ item.molecule_network_cidr | ansible.netcommon.ipaddr('netmask')}}"
-    #     last_usable_ip: "{{ item.molecule_network_cidr | ansible.netcommon.ipaddr('last_usable') }}"
-    #   loop: "{{ molecule_yml.platforms }}"
-    #   loop_control:
-    #     label: "{{ item.name }}"
-    #   when: (item.network_name is not defined) and (item.bridge_name is not defined)
-
-    # - debug: var=first_usable_ip
-    # - debug: var=second_useable_ip
-    # - debug: var=last_usable_ip
-    # - debug: var=netmask
-
     - name: Get list of all instances
       community.libvirt.virt:
         command: list_vms
