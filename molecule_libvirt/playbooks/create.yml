@@ -22,6 +22,7 @@
     default_ssh_port: "22"
     qemu_user: "qemu"
     mac: "52:54:00:ab:cd:"  # first 5 two-digit hexadecimal numbers
+    molecule_network_cidr: "10.10.10.1/24"
     temp_folder: "/tmp"
 
   tasks:
