@@ -81,8 +81,8 @@ This is a `molecule.yml` example file
 Optional parameters
 -------------------
 
-``molecule_bridge``: existing bridge on local host. Can be useful if you want to
-set network interface name created for molecule.
+``molecule_bridge``: existing bridge on local host. Can be useful if you
+want to set network interface name created for molecule.
 default value is: `molecule-br0`.
 
 ``molecule_network_cidr``: ip address range that should be bind to molecule
