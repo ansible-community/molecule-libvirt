@@ -81,22 +81,22 @@ This is a `molecule.yml` example file
 Optional parameters
 -------------------
 
-`molecule_bridge`: existing bridge on local host. Can be useful if you want to
+``molecule_bridge``: existing bridge on local host. Can be useful if you want to
 set network interface name created for molecule.
 default value is: `molecule-br0`.
 
-`molecule_network_cidr`: ip address range that should be bind to molecule
+``molecule_network_cidr``: ip address range that should be bind to molecule
 virtual network.
 default value is: `10.10.10.0/24`
 
-`qemu_user`: qemu process user. On RHEL like system qemu user is **qemu**.
+``qemu_user``: qemu process user. On RHEL like system qemu user is **qemu**.
 On Debian like, qemu user is **libvirt-qemu**.
 default value is: `qemu`.
 
-`bridge_name`: existing bridge on remote host. This bridge should allow VM
+``bridge_name``: existing bridge on remote host. This bridge should allow VM
 being reachable with an ip address.
 
-`libvirt_host` and `libvirt_user`: remote host parameters. **libvirt_user**
+``libvirt_host`` and ``libvirt_user``: remote host parameters. **libvirt_user**
 should belongs to *libvirt* group.
 
 Once set, you will have to run:
