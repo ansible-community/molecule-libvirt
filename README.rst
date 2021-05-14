@@ -93,6 +93,12 @@ default value is: `10.10.10.0/24`
 On Debian like, qemu user is **libvirt-qemu**.
 default value is: `qemu`.
 
+``cpu``: specifies CPU model requested by the guest virtual machine. default
+is : **qemu64** .
+
+``arch``: specifying the CPU architecture to virtualization. default is
+**x86_64**.
+
 ``bridge_name``: existing bridge on remote host. This bridge should allow VM
 being reachable with an ip address.
 
