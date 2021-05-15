@@ -5,4 +5,3 @@
     - name: "Include {{ cookiecutter.role_name }}"
       include_role:
         name: "{{ cookiecutter.role_name }}"
-
