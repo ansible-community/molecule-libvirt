@@ -42,6 +42,26 @@ Installation
 
    pip install molecule-libvirt
 
+Create a scenario
+-----------------
+
+With a new role
+^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+   molecule init role -d libvirt my-role
+
+This will create a new folder *my-role* containing a bare-bone generated
+role like you would do with ``ansible-galaxy init`` command.
+
+It will also contain a molecule folder with a default scenario
+using the libvirt driver (using ansible community.libvirt collection).
+
+Install the collection using:
+
+`ansible-galaxy install -r test_requirements.yml`.
+
 Example
 -------
 This is a `molecule.yml` example file
