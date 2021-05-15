@@ -83,21 +83,23 @@ Optional parameters
 
 ``molecule_bridge``: existing bridge on local host. Can be useful if you
 want to set network interface name created for molecule.
-default value is: `molecule-br0`.
+default value is: **molecule-br0**.
 
 ``molecule_network_cidr``: ip address range that should be bind to molecule
 virtual network.
-default value is: `10.10.10.0/24`
+default value is: **10.10.10.0/24**.
 
 ``qemu_user``: qemu process user. On RHEL like system qemu user is **qemu**.
 On Debian like, qemu user is **libvirt-qemu**.
-default value is: `qemu`.
+default value is: **qemu**.
 
 ``cpu``: specifies CPU model requested by the guest virtual machine. default
 is : **qemu64** .
 
 ``arch``: specifying the CPU architecture to virtualization. default is
 **x86_64**.
+
+``timezone``: vm's timezone. default is **America/Toronto**.
 
 ``bridge_name``: existing bridge on remote host. This bridge should allow VM
 being reachable with an ip address.
