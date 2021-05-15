@@ -75,21 +75,21 @@ This is a `molecule.yml` example file
   platforms:
     - name: instance-1
       cpu: 1
-      image_url: "https://mirror.csclub.uwaterloo.ca/fedora/linux/releases/33/Cloud/x86_64/images/Fedora-Cloud-Base-33-1.2.x86_64.qcow2"
+      image_url: "https://download.fedoraproject.org/pub/fedora/linux/releases/34/Cloud/x86_64/images/Fedora-Cloud-Base-34-1.2.x86_64.qcow2"
       disk_size: "10G"
       ssh_port: 22
       memory_size: "1" # in GB
     - name: instance-2
       memory: "1"
       cpus: 1
-      image_url: "https://mirror.csclub.uwaterloo.ca/fedora/linux/releases/33/Cloud/x86_64/images/Fedora-Cloud-Base-33-1.2.x86_64.qcow2"
+      image_url: "https://download.fedoraproject.org/pub/fedora/linux/releases/34/Cloud/x86_64/images/Fedora-Cloud-Base-34-1.2.x86_64.qcow2"
       libvirt_host: "server.home.lan"
       libvirt_user: "james"
       bridge_name: "bridge0"
     - name: instance-3
       memory: "1"
       cpus: 1
-      image_url: "https://mirror.csclub.uwaterloo.ca/fedora/linux/releases/33/Cloud/x86_64/images/Fedora-Cloud-Base-33-1.2.x86_64.qcow2"
+      image_url: "https://download.fedoraproject.org/pub/fedora/linux/releases/34/Cloud/x86_64/images/Fedora-Cloud-Base-34-1.2.x86_64.qcow2"
       libvirt_host: "server.home.lan"
       libvirt_user: "james"
       bridge_name: "bridge0"
