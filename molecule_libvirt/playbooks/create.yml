@@ -15,7 +15,7 @@
     libvirt_default_image_path: "{{ user_home_directory}}/.local/molecule/{{ molecule_scenario_name }}/vms"
     libvirt_vm_arch: "x86_64"
     libvirt_uri: "qemu:///system"
-    image_url: "https://mirror.csclub.uwaterloo.ca/fedora/linux/releases/33/Cloud/x86_64/images/Fedora-Cloud-Base-33-1.2.x86_64.qcow2"
+    image_url: "https://download.fedoraproject.org/pub/fedora/linux/releases/34/Cloud/x86_64/images/Fedora-Cloud-Base-34-1.2.x86_64.qcow2"
     default_disk_size: "15G"
     default_memory_size: "1"
     default_vcpu: "1"
