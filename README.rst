@@ -60,7 +60,7 @@ using the libvirt driver (using ansible community.libvirt collection).
 
 Install the collection using:
 
-`ansible-galaxy install -r test_requirements.yml`.
+``ansible-galaxy install -r test_requirements.yml``.
 
 Example
 -------
