@@ -150,9 +150,9 @@
       delegate_to: "{{ item.libvirt_host | default('localhost') }}"
 
     - name: Expand original image on the new sized volume
-      ansible.builtin.command:
-        "virt-resize --quiet --expand /dev/sda1 {{ item.name }}.qcow2
-        {{ item.name }}-temp.qcow2"
+      ansible.builtin.shell: |
+        umask 0002
+        virt-resize --quiet --expand /dev/sda1 {{ item.name }}.qcow2 {{ item.name }}-temp.qcow2
       args:
         chdir: "{{ libvirt_default_image_path }}"
       loop: "{{ molecule_yml.platforms }}"
