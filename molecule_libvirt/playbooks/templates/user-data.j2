@@ -1,0 +1,30 @@
+#cloud-config
+# Customize as per your need. At least change username ({{ molecule_ssh_user }})
+# key with your actual public key
+
+# Hostname management
+preserve_hostname: False
+hostname: {{ item.name }}
+fqdn: {{ item.name }}.{{ molecule_dns_suffix }}
+
+# Setup users with ssh keys so molecule can log in into new machine
+users:
+    - default
+    - name: "{{ molecule_ssh_user }}"
+      groups: ['wheel']
+      shell: /bin/bash
+      sudo: ALL=(ALL) NOPASSWD:ALL
+      ssh-authorized-keys:
+        - {{ ssh_key.public_key }}
+
+# Configure where output will go
+output:
+  all: ">> /var/log/cloud-init.log"
+
+# set timezone for VM
+timezone: {{ item.timezone | default('America/Toronto') }}
+
+# Remove cloud-init
+runcmd:
+  - systemctl restart network
+  - dnf -y remove cloud-init || apt-get -y remove cloud-init

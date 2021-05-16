@@ -31,6 +31,114 @@ resources.
 Please note that this driver is currently in its early stage of development,
 do not even try to install or use it until this message is removed.
 
+.. _quickstart:
+
+Quickstart
+==========
+
+Installation
+------------
+.. code-block:: bash
+
+   pip install molecule-libvirt
+
+Create a scenario
+-----------------
+
+With a new role
+^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+   molecule init role -d libvirt my-role
+
+This will create a new folder *my-role* containing a bare-bone generated
+role like you would do with ``ansible-galaxy init`` command.
+
+It will also contain a molecule folder with a default scenario
+using the libvirt driver (using ansible community.libvirt collection).
+
+Install the collection using:
+
+``ansible-galaxy install -r test_requirements.yml``.
+
+Example
+-------
+This is a `molecule.yml` example file
+
+.. code-block:: yaml
+
+  dependency:
+  name: galaxy
+  driver:
+    name: libvirt
+  platforms:
+    - name: instance-1
+      cpu: 1
+      image_url: "https://download.fedoraproject.org/pub/fedora/linux/releases/34/Cloud/x86_64/images/Fedora-Cloud-Base-34-1.2.x86_64.qcow2"
+      disk_size: "10G"
+      ssh_port: 22
+      memory_size: "1" # in GB
+    - name: instance-2
+      memory: "1"
+      cpus: 1
+      image_url: "https://download.fedoraproject.org/pub/fedora/linux/releases/34/Cloud/x86_64/images/Fedora-Cloud-Base-34-1.2.x86_64.qcow2"
+      libvirt_host: "server.home.lan"
+      libvirt_user: "james"
+      bridge_name: "bridge0"
+    - name: instance-3
+      memory: "1"
+      cpus: 1
+      image_url: "https://download.fedoraproject.org/pub/fedora/linux/releases/34/Cloud/x86_64/images/Fedora-Cloud-Base-34-1.2.x86_64.qcow2"
+      libvirt_host: "server.home.lan"
+      libvirt_user: "james"
+      bridge_name: "bridge0"
+  provisioner:
+    name: ansible
+  verifier:
+    name: ansible
+
+Optional parameters
+-------------------
+
+``molecule_bridge``: existing bridge on local host. Can be useful if you
+want to set network interface name created for molecule.
+default value is: **molecule-br0**.
+
+``molecule_network_cidr``: ip address range that should be bind to molecule
+virtual network.
+default value is: **10.10.10.0/24**.
+
+``qemu_user``: qemu process user. On RHEL like system qemu user is **qemu**.
+On Debian like, qemu user is **libvirt-qemu**.
+default value is: **qemu**.
+
+``cpu``: specifies CPU model requested by the guest virtual machine. default
+is : **qemu64** .
+
+``arch``: specifying the CPU architecture to virtualization. default is
+**x86_64**.
+
+``timezone``: vm's timezone. default is **America/Toronto**.
+
+``bridge_name``: existing bridge on remote host. This bridge should allow VM
+being reachable with an ip address.
+
+``libvirt_host`` and ``libvirt_user``: remote host parameters. **libvirt_user**
+should belongs to *libvirt* group.
+
+Once set, you will have to run:
+
+.. code-block:: bash
+
+   molecule test
+
+
+Documentation
+=============
+
+Read the documentation and more at https://molecule.readthedocs.io/.
+
 .. _get-involved:
 
 Get Involved
@@ -54,6 +162,8 @@ Get Involved
 Authors
 =======
 
+* James Regis
+* Gaëtan Trellu
 * Gariele Cerami
 * Sorin Sbarnea
 
