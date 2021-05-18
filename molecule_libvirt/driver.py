@@ -18,6 +18,8 @@
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 #  DEALINGS IN THE SOFTWARE.
 import os
+import getpass
+import grp
 from molecule import logger
 from molecule.api import Driver
 
@@ -133,7 +135,17 @@ class LibVirt(Driver):
         )
 
     def sanity_checks(self):
-        pass
+        """Return an exception if user doesn't belong to libvirt group"""
+        username = getpass.getuser()
+        groups = [group.gr_name for group in grp.getgrall() if username in group.gr_mem]
+        try:
+            assert "libvirt" in groups
+        except AssertionError:
+            util.sysexit_with_message(
+                "Current user doesn't belong to libvirt group. Running "
+                "'usermod --append --groups libvirt `whoami`'"
+                "and 'newgrp libvirt' should fix it."
+            )
 
     def template_dir(self):
         """Return path to its own cookiecutterm templates. It is used by init
