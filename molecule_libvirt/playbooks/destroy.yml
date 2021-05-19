@@ -137,7 +137,7 @@
 
     - name: Remove hidden expanded info file
       ansible.builtin.file:
-        path: "{{ libvirt_default_image_path }}/.{{ item.name }}"
+        path: "{{ libvirt_default_image_path }}/.{{ item.name }}-expanded"
         state: absent
       loop: "{{ molecule_yml.platforms }}"
       loop_control:
