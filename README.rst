@@ -75,6 +75,7 @@ This is a `molecule.yml` example file
   platforms:
     - name: instance-1
       cpu: 1
+      cpu_model: "qemu64"
       image_url: "https://download.fedoraproject.org/pub/fedora/linux/releases/34/Cloud/x86_64/images/Fedora-Cloud-Base-34-1.2.x86_64.qcow2"
       disk_size: "10G"
       ssh_port: 22
@@ -113,8 +114,8 @@ default value is: **10.10.10.0/24**.
 On Debian like, qemu user is **libvirt-qemu**.
 default value is: **qemu**.
 
-``cpu``: specifies CPU model requested by the guest virtual machine. default
-is : **qemu64** .
+``cpu_model``: specifies CPU model requested by the guest virtual machine.
+default is : **qemu64**.
 
 ``arch``: specifying the CPU architecture to virtualization. default is
 **x86_64**.

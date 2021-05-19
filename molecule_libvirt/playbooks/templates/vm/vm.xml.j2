@@ -21,7 +21,7 @@ or other application using the libvirt API.
     <vmport state='off'/>
   </features>
   <cpu mode='custom' match='exact' check='none'>
-    <model fallback='allow'>{{ item.cpu | default('qemu64')}}</model>
+    <model fallback='allow'>{{ item.cpu_model | default('qemu64')}}</model>
   </cpu>
   <clock offset='utc'>
     <timer name='rtc' tickpolicy='catchup'/>
