@@ -1,16 +1,16 @@
 ---
 repos:
   - repo: https://github.com/PyCQA/doc8.git
-    rev: 0.9.0a1
+    rev: 0.9.1
     hooks:
       - id: doc8
-  - repo: https://github.com/python/black.git
-    rev: 20.8b1
+  - repo: https://github.com/psf/black
+    rev: 21.10b0
     hooks:
       - id: black
         language_version: python3
   - repo: https://github.com/pre-commit/pre-commit-hooks.git
-    rev: v3.3.0
+    rev: v4.0.1
     hooks:
       - id: end-of-file-fixer
       - id: trailing-whitespace
@@ -19,21 +19,21 @@ repos:
       - id: check-executables-have-shebangs
       - id: check-merge-conflict
       - id: debug-statements
-  - repo: https://gitlab.com/pycqa/flake8.git
-    rev: 3.8.4
+  - repo: https://github.com/PyCQA/flake8
+    rev: 4.0.1
     hooks:
       - id: flake8
         additional_dependencies:
           - flake8-black
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.25.0
+    rev: v1.26.3
     hooks:
       - id: yamllint
         files: \.(yaml|yml)$
         types: [file, yaml]
         entry: yamllint --strict
   - repo: https://github.com/codespell-project/codespell.git
-    rev: v1.17.1
+    rev: v2.1.0
     hooks:
       - id: codespell
         name: codespell
