@@ -47,6 +47,18 @@
         label: "{{ item.name }}"
       delegate_to: "{{ item.libvirt_host if item.libvirt_host is defined else 'localhost' }}"
 
+    - name: Allow qemu process read qcow2 images in .local directory
+      ansible.posix.acl:
+        path: "{{ user_home_directory }}/.local"
+        entity: "{{ item.qemu_user | default(qemu_user) }}"
+        etype: user
+        permissions: x
+        state: present
+      loop: "{{ molecule_yml.platforms }}"
+      loop_control:
+        label: "{{ item.name }}"
+      delegate_to: "{{ item.libvirt_host if item.libvirt_host is defined else 'localhost' }}"
+
     - name: Create network molecule network
       community.libvirt.virt_net:
         command: define
