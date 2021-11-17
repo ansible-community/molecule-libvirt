@@ -1,11 +1,11 @@
 - job:
     name: molecule-libvirt-fedora
-    description: Run py38 tox environment
-    parent: ansible-tox-py38
+    description: Run py39 tox environment
+    parent: ansible-tox-py39
     nodeset: fedora-latest-1vcpu
     attempts: 1
     vars:
-      tox_envlist: py38
+      tox_envlist: py39
     timeout: 5400  # 1.5h
 
 - job:
