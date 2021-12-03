@@ -151,7 +151,7 @@
       ansible.builtin.command:
         "qemu-img create -f qcow2 -o preallocation=metadata
         {{ item.name }}-temp.qcow2
-        {{ disk_size | default(default_disk_size ) }}"
+        {{ item.disk_size | default(default_disk_size ) }}"
       args:
         chdir: "{{ libvirt_default_image_path }}"
       environment:
