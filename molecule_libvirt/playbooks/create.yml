@@ -164,7 +164,7 @@
     - name: Expand original image on the new sized volume
       ansible.builtin.shell: |
         umask 0002
-        virt-resize --quiet --expand /dev/sda1 {{ item.name }}.qcow2 {{ item.name }}-temp.qcow2
+        virt-resize --quiet --expand {{ item.image_volume | default('/dev/sda1') }} {{ item.name }}.qcow2 {{ item.name }}-temp.qcow2
         touch "{{ libvirt_default_image_path }}/.{{ item.name }}-expanded"
       args:
         chdir: "{{ libvirt_default_image_path }}"
